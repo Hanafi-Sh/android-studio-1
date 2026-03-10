@@ -1,4 +1,4 @@
-package com.hanafi.pelacak // Sesuaikan dengan package Anda jika berbeda
+package com.hanafi.han
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -15,13 +15,12 @@ import java.net.URL
 
 class LocationWorker(appContext: Context, workerParams: WorkerParameters) : CoroutineWorker(appContext, workerParams) {
 
-    @SuppressLint("MissingPermission") // Kita akan tangani izin di MainActivity nanti
+    @SuppressLint("MissingPermission")
     override suspend fun doWork(): Result {
         return try {
-            // 1. Siapkan alat pencari lokasi
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
             
-            // 2. Ambil lokasi saat ini (Akurasi seimbang agar hemat baterai)
+            // Mengambil lokasi (akurasi seimbang agar hemat baterai)
             val location = fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null).await()
 
             if (location != null) {
@@ -30,29 +29,25 @@ class LocationWorker(appContext: Context, workerParams: WorkerParameters) : Coro
                 
                 Log.d("PelacakNinja", "Lokasi Ditemukan: $latitude, $longitude")
 
-                // 3. Kirim ke server/database Anda (Gunakan fungsi jaringan bawaan agar hemat RAM)
+                // Kirim ke server
                 kirimKeServer(latitude, longitude)
             }
 
             Result.success()
         } catch (e: Exception) {
-            Log.e("PelacakNinja", "Gagal mengambil/mengirim lokasi: ${e.message}")
-            Result.retry() // Coba lagi nanti jika gagal (misal tidak ada sinyal)
+            Log.e("PelacakNinja", "Gagal mengambil lokasi: ${e.message}")
+            Result.retry() // Coba lagi nanti jika gagal
         }
     }
 
     private suspend fun kirimKeServer(lat: Double, lon: Double) {
-        // Pindah ke jalur belakang (IO) agar aplikasi tidak macet
         withContext(Dispatchers.IO) {
             try {
-                // SEMENTARA: Kita akan tembak ke bot Railway Anda!
-                // Ganti URL ini dengan URL Railway Anda nanti
-                val urlRailway = "https://NAMA-RAILWAY-ANDA.up.railway.app/update-lokasi?lat=$lat&lon=$lon"
-                
-                val url = URL(urlRailway)
+                val urlServer = "https://mymaps.hanavy.online/api/update?lat=$lat&lon=$lon"
+                val url = URL(urlServer)
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
-                connection.connectTimeout = 5000 // Maksimal nunggu 5 detik
+                connection.connectTimeout = 5000 
                 
                 val responseCode = connection.responseCode
                 Log.d("PelacakNinja", "Status Pengiriman: $responseCode")
