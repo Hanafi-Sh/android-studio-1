@@ -1,16 +1,18 @@
 package com.hanafi.han
 
-import androidx.work.OneTimeWorkRequestBuilder
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.concurrent.TimeUnit
@@ -21,10 +23,22 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Mencari tombol di layar berdasarkan ID-nya
-        val btnMulai = findViewById<Button>(R.id.btnMulai)
+        // 1. Cari elemen di layar berdasarkan ID di XML Anda
+        val inputNama = findViewById<EditText>(R.id.inputNamaPerangkat)
+        val btnMulai = findViewById<Button>(R.id.btnMulai) // Pastikan ID ini sesuai dengan di XML
 
+        // 2. Pasang aksi HANYA SATU KALI saat tombol diklik
         btnMulai.setOnClickListener {
+            // Ambil teks yang diketik pengguna
+            val namaDiketik = inputNama.text.toString().trim()
+
+            // Simpan ke Brankas Lokal HP
+            val sharedPref = getSharedPreferences("PelacakPrefs", Context.MODE_PRIVATE)
+            sharedPref.edit().putString("nama_input", namaDiketik).apply()
+
+            Toast.makeText(this, "Melacak sebagai: ${if(namaDiketik.isEmpty()) "Anonim" else namaDiketik}", Toast.LENGTH_SHORT).show()
+
+            // PENTING: Panggil fungsi cek izin dulu, jangan langsung jalankanWorker
             cekIzinDanJalankan()
         }
     }
@@ -41,6 +55,7 @@ class MainActivity : AppCompatActivity() {
                     return
                 }
             }
+            // Jika izin aman, baru pekerjakan kurir!
             jalankanWorker()
         } else {
             ActivityCompat.requestPermissions(

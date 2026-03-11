@@ -43,10 +43,10 @@ class LocationWorker(appContext: Context, workerParams: WorkerParameters) : Coro
     private suspend fun kirimKeServer(lat: Double, lon: Double) {
         withContext(Dispatchers.IO) {
             try {
-                // Membaca "Brankas Lokal" di HP untuk mencari ID dan Nama
-                val sharedPref = applicationContext.getSharedPreferences("PelacakPrefs", android.content.Context.MODE_PRIVATE)
+                // 1. Membaca "Brankas Lokal" di HP untuk mencari ID dan Nama
+                val sharedPref = applicationContext.getSharedPreferences("PelacakPrefs", Context.MODE_PRIVATE)
 
-                // Cek apakah HP ini sudah punya KTP?
+                // 2. Cek apakah HP ini sudah punya ID Permanen?
                 var targetId = sharedPref.getString("id_target", null)
                 if (targetId == null) {
                     // Jika belum punya, buatkan ID acak dan simpan permanen
@@ -55,20 +55,20 @@ class LocationWorker(appContext: Context, workerParams: WorkerParameters) : Coro
                     sharedPref.edit().putString("id_target", targetId).apply()
                 }
 
-                // Ambil nama dari inputan (jika kosong, gunakan ID target tadi)
+                // 3. Ambil nama dari inputan (jika kosong, gunakan ID target tadi)
                 var targetNama = sharedPref.getString("nama_input", "")
                 if (targetNama.isNullOrEmpty()) {
                     targetNama = targetId
                 }
 
-                // Enkripsi nama agar aman dikirim lewat URL
+                // 4. Enkripsi nama agar aman dikirim lewat URL (menghindari error karena spasi)
                 val namaAman = java.net.URLEncoder.encode(targetNama, "UTF-8")
 
-                // Merakit peluru (URL)
+                // 5. Merakit peluru (URL Tembakan Baru)
                 val urlServer = "https://mymaps.hanavy.online/api/update?id=$targetId&nama=$namaAman&lat=$lat&lon=$lon"
-                val url = java.net.URL(urlServer)
+                val url = URL(urlServer)
                 
-                // === TARIK PELATUKNYA DI SINI! (Kirim ke Vercel) ===
+                // === 6. TARIK PELATUKNYA DI SINI! (Kirim ke Vercel) ===
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
                 connection.connectTimeout = 5000 // Batas waktu tunggu 5 detik
