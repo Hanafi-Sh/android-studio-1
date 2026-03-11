@@ -2,4 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Modern palette matching the app icon -->
+    <color name="neon_blue">#00E5FF</color>
+    <color name="neon_blue_dark">#00B8D4</color>
+    <color name="dark_gray">#121212</color>
+    <color name="darker_gray">#0A0A0A</color>
+    <color name="surface_dark">#1E1E1E</color>
+    <color name="text_hint_dark">#888888</color>
 </resources>

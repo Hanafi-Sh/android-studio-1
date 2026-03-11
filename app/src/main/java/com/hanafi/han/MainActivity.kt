@@ -3,7 +3,11 @@ package com.hanafi.han
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -55,8 +59,8 @@ class MainActivity : AppCompatActivity() {
                     return
                 }
             }
-            // Jika izin aman, baru pekerjakan kurir!
-            jalankanWorker()
+            // Jika izin aman, cek baterai!
+            cekBateraiDanJalankan()
         } else {
             ActivityCompat.requestPermissions(
                 this,
@@ -75,14 +79,29 @@ class MainActivity : AppCompatActivity() {
         } else if (requestCode == 2 && grantResults.isNotEmpty()) {
             // Izin background
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                jalankanWorker()
+                cekBateraiDanJalankan()
             } else {
                 Toast.makeText(this, "Pelacakan berjalan, namun mungkin berhenti saat aplikasi ditutup.", Toast.LENGTH_LONG).show()
-                jalankanWorker()
+                cekBateraiDanJalankan()
             }
         } else if (requestCode == 1) {
             Toast.makeText(this, "Aplikasi butuh izin lokasi untuk melacak!", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun cekBateraiDanJalankan() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val intent = Intent()
+            val packageName = packageName
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                intent.data = Uri.parse("package:$packageName")
+                startActivity(intent)
+                Toast.makeText(this, "Mohon izinkan 'Unrestricted' agar pelacak tidak mati.", Toast.LENGTH_LONG).show()
+            }
+        }
+        jalankanWorker()
     }
 
     private fun jalankanWorker() {
