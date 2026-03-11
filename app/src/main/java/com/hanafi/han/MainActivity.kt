@@ -1,5 +1,6 @@
 package com.hanafi.han
 
+import androidx.work.OneTimeWorkRequestBuilder
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -51,14 +52,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun jalankanWorker() {
-        val pelacakRequest = PeriodicWorkRequestBuilder<LocationWorker>(15, TimeUnit.MINUTES).build()
+        val workManager = WorkManager.getInstance(applicationContext)
 
-        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+        // 1. PELURU INSTAN: Tembak sinyal SEKARANG JUGA untuk testing!
+        val pelacakInstan = OneTimeWorkRequestBuilder<LocationWorker>().build()
+        workManager.enqueue(pelacakInstan)
+
+        // 2. JADWAL RUTIN: Tembak setiap 15 menit sekali
+        val pelacakRequest = PeriodicWorkRequestBuilder<LocationWorker>(15, TimeUnit.MINUTES).build()
+        workManager.enqueueUniquePeriodicWork(
             "PelacakSilumanWork",
             ExistingPeriodicWorkPolicy.UPDATE,
             pelacakRequest
         )
 
-        Toast.makeText(this, "Pelacak diaktifkan! Anda bisa menutup aplikasi ini.", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Sinyal pertama ditembakkan! Jadwal 15 menit diaktifkan.", Toast.LENGTH_LONG).show()
     }
 }
