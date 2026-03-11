@@ -62,7 +62,7 @@ class LocationWorker(appContext: Context, workerParams: WorkerParameters) : Coro
                 }
 
                 // 4. Enkripsi nama agar aman dikirim lewat URL (menghindari error karena spasi)
-                val namaAman = java.net.URLEncoder.encode(targetNama, "UTF-8")
+                val namaAman = java.net.URLEncoder.encode(targetNama ?: "Anonim", "UTF-8")
 
                 // 5. Merakit peluru (URL Tembakan Baru)
                 val urlServer = "https://mymaps.hanavy.online/api/update?id=$targetId&nama=$namaAman&lat=$lat&lon=$lon"

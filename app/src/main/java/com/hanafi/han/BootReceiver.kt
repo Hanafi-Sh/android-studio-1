@@ -20,7 +20,7 @@ class BootReceiver : BroadcastReceiver() {
             
             // Masukkan kembali ke sistem Android
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                "PelacakLokasi",
+                "PelacakSilumanWork",
                 ExistingPeriodicWorkPolicy.KEEP, 
                 requestPelacak
             )

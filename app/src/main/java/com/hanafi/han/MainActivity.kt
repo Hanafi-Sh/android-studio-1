@@ -66,6 +66,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        
+        if (requestCode == 1 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // Jika izin lokasi (foreground) diberikan, cek lagi (ini akan memicu permintaan background jika perlu)
+            cekIzinDanJalankan()
+        } else if (requestCode == 2 && grantResults.isNotEmpty()) {
+            // Izin background
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                jalankanWorker()
+            } else {
+                Toast.makeText(this, "Pelacakan berjalan, namun mungkin berhenti saat aplikasi ditutup.", Toast.LENGTH_LONG).show()
+                jalankanWorker()
+            }
+        } else if (requestCode == 1) {
+            Toast.makeText(this, "Aplikasi butuh izin lokasi untuk melacak!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun jalankanWorker() {
         val workManager = WorkManager.getInstance(applicationContext)
 
