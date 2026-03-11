@@ -1,5 +1,6 @@
 package com.hanafi.han
 
+import android.provider.Settings
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -24,6 +25,9 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        val idUnik = androidId?.take(6)?.uppercase() ?: "UNKNOWN"
+        val targetId = "HP_$idUnik"
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
